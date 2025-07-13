@@ -21,16 +21,21 @@ export class HeroLayout {
   public readonly routeTitle$ = merge(
     this._router.events.pipe(
       filter((event) => event instanceof NavigationEnd),
+      // Emit an initial value so the route title is available on component initialization
       startWith(null),
     ),
   ).pipe(
     map(() => {
+      // Start from the root activated route
       let route = this._activatedRoute.root;
+
+      // Traverse to the deepest child route
       while (route.firstChild) {
         route = route.firstChild;
-        console.log(route);
       }
-      return route.snapshot.data['title'] || '';
+
+      // Return the title from route data or an empty string if none exists
+      return route.snapshot.data['title'] ?? '';
     }),
   );
 }
