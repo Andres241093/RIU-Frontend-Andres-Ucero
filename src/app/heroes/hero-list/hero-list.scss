@@ -1,0 +1,29 @@
+a {
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.search mat-form-field {
+  flex: 1;
+}
+
+.search button {
+  flex: 0 0 auto;
+  height: 56px;
+}
+
+.search button mat-icon {
+  padding-left: 10px;
+}

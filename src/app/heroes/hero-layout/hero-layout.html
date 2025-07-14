@@ -1,2 +1,8 @@
-{{ routeTitle$ | async }}
-<router-outlet></router-outlet>
+<mat-toolbar>
+  <span>Heroes</span>
+</mat-toolbar>
+<app-loader />
+<div class="container">
+  <h1>{{ routeTitle() }}</h1>
+  <router-outlet></router-outlet>
+</div>

@@ -1,1 +1,32 @@
-<p>hero-list works!</p>
+<div class="container">
+  <a matButton="filled" routerLink="/heroes/new">Create a hero +</a>
+
+  <div class="search">
+    <mat-form-field class="example-full-width">
+      <mat-label>Search</mat-label>
+      <input
+        (keydown.enter)="searchHeroes()"
+        [formControl]="searchControl"
+        matInput
+        placeholder="Hero's name"
+      />
+    </mat-form-field>
+
+    <button (click)="searchHeroes()" matButton="filled">Search</button>
+    <button (click)="reset()" matButton="filled">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+</div>
+<ng-container
+  *ngComponentOutlet="heroTableComponent; inputs: { dataSource: dataSource() }"
+></ng-container>
+@if (!_defaultPagination.hide) {
+  <mat-paginator
+    [pageSizeOptions]="[5, 10, 20, 40]"
+    [length]="totalData()"
+    (page)="getPage($event)"
+    showFirstLastButtons
+  >
+  </mat-paginator>
+}
