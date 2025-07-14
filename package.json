@@ -27,7 +27,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,html,scss}": [
+    "*.{ts,html}": [
       "prettier --write",
       "eslint --fix"
     ]
@@ -60,6 +60,7 @@
     "@typescript-eslint/parser": "7.11.0",
     "eslint": "8.57.1",
     "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-css-modules": "^2.12.0",
     "eslint-plugin-prettier": "^5.5.1",
     "husky": "^9.1.7",
     "jasmine-core": "~5.8.0",
