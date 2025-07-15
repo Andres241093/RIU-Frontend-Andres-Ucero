@@ -1,29 +1,32 @@
-a {
-  margin-bottom: 10px;
-  align-self: flex-start;
-}
-
 .container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.search {
   display: flex;
   gap: 10px;
   align-items: stretch;
+  margin-bottom: 10px;
 }
 
-.search mat-form-field {
+.container app-hero-search-bar {
   flex: 1;
 }
 
-.search button {
+.container a {
   flex: 0 0 auto;
   height: 56px;
 }
 
-.search button mat-icon {
-  padding-left: 10px;
+.paginator-loader {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
 }

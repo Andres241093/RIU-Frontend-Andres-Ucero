@@ -10,11 +10,14 @@ RUN npm ci
 
 COPY . .
 
-# Production build
-RUN npm run build -- --configuration production
+# Check code errors and try to fix it
+RUN npm run lint:fix
 
-# Step 2: Serve app with Nginx no root
-FROM nginxinc/nginx-unprivileged:alpine
+# Production build
+RUN npm run build:prod
+
+# Step 2: Serve app with Nginx -- root
+FROM nginx:alpine
 
 # Copy default nginx config for angular router
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf

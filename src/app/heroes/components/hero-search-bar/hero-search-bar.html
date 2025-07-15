@@ -1,0 +1,16 @@
+<div class="search">
+  <mat-form-field class="example-full-width">
+    <mat-label>Search</mat-label>
+    <input
+      (keydown.enter)="onSearchHero()"
+      [formControl]="searchControl"
+      matInput
+      placeholder="Hero's name"
+    />
+  </mat-form-field>
+
+  <button (click)="onSearchHero()" matButton="filled">Search</button>
+  <button (click)="onReset()" matButton="filled">
+    <mat-icon>refresh</mat-icon>
+  </button>
+</div>

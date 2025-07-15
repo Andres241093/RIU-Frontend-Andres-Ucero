@@ -1,5 +1,5 @@
 export const HERO_ERROR_MESSAGES = {
-  NO_RESULTS_FOUND: 'No heroes found!',
+  NO_RESULTS_FOUND: 'No hero found!',
   UPDATE_ERROR: 'Error updating hero!',
   DELETE_ERROR: 'Error deleting hero!',
   CREATE_ERROR: 'Invalid hero data',

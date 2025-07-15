@@ -1,0 +1,16 @@
+<h2 mat-dialog-title>{{ data.title }}</h2>
+<mat-dialog-content>
+  <span>{{ data.content }}</span>
+</mat-dialog-content>
+<mat-dialog-actions>
+  @if (data.showTwoBtn) {
+    <button matButton mat-dialog-close>{{ data.btnLabel.deny }}</button>
+    <button matButton (click)="accept()" cdkFocusInitial>
+      {{ data.btnLabel.accept }}
+    </button>
+  } @else {
+    <button matButton (click)="accept()" mat-dialog-close cdkFocusInitial>
+      {{ data.btnLabel.accept }}
+    </button>
+  }
+</mat-dialog-actions>

@@ -1,32 +1,32 @@
 <div class="container">
-  <a matButton="filled" routerLink="/heroes/new">Create a hero +</a>
-
-  <div class="search">
-    <mat-form-field class="example-full-width">
-      <mat-label>Search</mat-label>
-      <input
-        (keydown.enter)="searchHeroes()"
-        [formControl]="searchControl"
-        matInput
-        placeholder="Hero's name"
-      />
-    </mat-form-field>
-
-    <button (click)="searchHeroes()" matButton="filled">Search</button>
-    <button (click)="reset()" matButton="filled">
-      <mat-icon>refresh</mat-icon>
-    </button>
-  </div>
+  <app-hero-search-bar
+    (searchEvent)="searchHeroes($event)"
+    (resetEvent)="resetValues()"
+  />
+  <a matButton="filled" routerLink="/heroes/new">Create a hero</a>
 </div>
-<ng-container
-  *ngComponentOutlet="heroTableComponent; inputs: { dataSource: dataSource() }"
-></ng-container>
-@if (!_defaultPagination.hide) {
-  <mat-paginator
-    [pageSizeOptions]="[5, 10, 20, 40]"
-    [length]="totalData()"
-    (page)="getPage($event)"
-    showFirstLastButtons
-  >
-  </mat-paginator>
+
+@defer (when !isLoading()) {
+  <app-hero-table
+    [dataSource]="dataSource()"
+    [isLoading]="isLoading()"
+    (deleteEvent)="openDeleteDialog($event)"
+  />
+  @if (showPaginator()) {
+    <div [class.paginator-loader]="isLoading()">
+      <mat-paginator
+        [disabled]="isLoading()"
+        [pageSizeOptions]="[10, 20, 40]"
+        [length]="totalData()"
+        (page)="getPage($event)"
+        showFirstLastButtons
+      >
+      </mat-paginator>
+    </div>
+  }
+} @placeholder {
+  <!-- Only shows on the first render -->
+  <div class="spinner-container">
+    <mat-spinner></mat-spinner>
+  </div>
 }

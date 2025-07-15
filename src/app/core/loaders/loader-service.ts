@@ -6,8 +6,9 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class LoaderService {
   private loadingCount = 0; // Counter to track active requests and avoid flickering
-  private readonly _loaderSubject = new BehaviorSubject<boolean>(false);
-  public readonly loading$ = this._loaderSubject.asObservable();
+  private readonly loaderSubject = new BehaviorSubject<boolean>(false);
+
+  public readonly loading$ = this.loaderSubject.asObservable();
 
   /**
    * Increments the request count and shows the loader only when the first request starts.
@@ -15,7 +16,7 @@ export class LoaderService {
   show(): void {
     this.loadingCount++;
     if (this.loadingCount === 1) {
-      this._loaderSubject.next(true);
+      this.loaderSubject.next(true);
     }
   }
 
@@ -27,7 +28,7 @@ export class LoaderService {
     if (this.loadingCount > 0) {
       this.loadingCount--;
       if (this.loadingCount === 0) {
-        this._loaderSubject.next(false);
+        this.loaderSubject.next(false);
       }
     }
   }
