@@ -1,1 +1,55 @@
-<p>hero-form works!</p>
+<form [formGroup]="heroForm" (ngSubmit)="submit()">
+  <a routerLink="/home" matButton="filled">
+    <mat-icon>keyboard_arrow_left</mat-icon>
+    Home</a
+  >
+  <mat-form-field class="example-full-width">
+    <mat-label>Choose a name:</mat-label>
+    <input
+      formControlName="name"
+      matInput
+      placeholder="Hero's name"
+      appUppercaseDirective
+    />
+    @if (heroForm.get("name")?.hasError("required")) {
+      <mat-error>{{ FORM_ERRORS.REQUIRED.NAME }}</mat-error>
+    }
+  </mat-form-field>
+  <mat-form-field class="example-full-width">
+    <mat-label>Where are you from?:</mat-label>
+    <input formControlName="universe" matInput placeholder="Universe" />
+    @if (heroForm.get("universe")?.hasError("required")) {
+      <mat-error>{{ FORM_ERRORS.REQUIRED.UNIVERSE }}</mat-error>
+    }
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Select a power!</mat-label>
+    <mat-select formControlName="power" multiple>
+      @for (power of powers; track $index) {
+        <mat-option [value]="power" [disabled]="isPowerDisabled(power)">{{
+          power
+        }}</mat-option>
+      }
+    </mat-select>
+    <mat-hint
+      >You have
+      {{ maxPowersToCHoose() - heroForm.value.power?.length }}
+      power to choose</mat-hint
+    >
+    @if (heroForm.get("power")?.hasError("maxArrayLength")) {
+      <mat-error>{{ FORM_ERRORS.MAX_LENGTH.POWER }}</mat-error>
+    }
+  </mat-form-field>
+
+  <button matButton="filled"><mat-icon>save_alt</mat-icon>Save</button>
+
+  @if (heroForm.touched && heroForm.invalid) {
+    <span class="error">{{ FORM_ERRORS.INVALID_FORM }}</span>
+  }
+
+  @if (!heroId) {
+    <span class="note"
+      >NOTE: If you create a hero, you will see it at the end of the list</span
+    >
+  }
+</form>

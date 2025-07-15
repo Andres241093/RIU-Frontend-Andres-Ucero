@@ -1,0 +1,31 @@
+.search {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.search mat-form-field {
+  flex: 1;
+}
+
+.search button {
+  flex: 0 0 auto;
+  height: 56px;
+}
+
+.search button mat-icon {
+  padding-left: 10px;
+}
+
+@media (max-width: 768px) {
+  .search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search mat-form-field,
+  .search button,
+  .search a {
+    width: 100%;
+  }
+}

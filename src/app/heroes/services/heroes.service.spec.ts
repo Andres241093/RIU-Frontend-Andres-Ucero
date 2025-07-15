@@ -1,10 +1,10 @@
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
-import { HEROES_MOCK } from '../../heroes/mocks/hero-mock';
-import { HEROES_TOKEN } from '../injection-tokens/heroes-token';
+import { HEROES_MOCK } from '../../heroes/test/mocks/hero-mock';
 import { Hero } from '../../heroes/interfaces/hero.interface';
 import { HERO_ERROR_MESSAGES } from '../../heroes/const/hero-error-messages';
 import { HeroesService } from './heroes.service';
 import { PagedResult } from '../../shared/interfaces/pagination.interface';
+import { HEROES_TOKEN } from '../../core/injection-tokens/heroes-token';
 
 describe('HeroesService', () => {
   let service: HeroesService;
@@ -25,7 +25,7 @@ describe('HeroesService', () => {
     service = TestBed.inject(HeroesService);
     paginationDefault = {
       page: 1,
-      pageSize: 5,
+      pageSize: 10,
     };
   });
 
@@ -33,7 +33,9 @@ describe('HeroesService', () => {
     expect(service).toBeTruthy();
   });
 
-  // First will test if each method return correct data given a correct value
+  // -------------------------
+  //  Test if each method return correct data
+  // -------------------------
 
   it('should return first 5 heroes', fakeAsync(() => {
     const heroes$ = service.getAll(
@@ -45,13 +47,9 @@ describe('HeroesService', () => {
       next: (heroes) => (heroList = heroes.items),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if observable emits an array
     expect(Array.isArray(heroList)).toBeTrue();
-
-    // Verify if results has one item at least
     expect(heroList?.length).toBeGreaterThan(0);
 
     // Verify returned heroes are the first 5 from HEROES_MOCK
@@ -74,16 +72,11 @@ describe('HeroesService', () => {
       next: (result) => (pagedResult = result),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
     expect(pagedResult).toBeDefined();
     expect(Array.isArray(pagedResult?.items)).toBeTrue();
-
-    // Verify the number of items does not exceed pageSize
     expect(pagedResult?.items.length).toBeLessThanOrEqual(pageSize);
-
-    // Verify total matches total heroes in mock
     expect(pagedResult?.total).toBe(HEROES_MOCK.length);
 
     // Check that each hero has power array with no nulls (mapped to 'Powerless' if null)
@@ -109,12 +102,9 @@ describe('HeroesService', () => {
         next: (result) => (pagedResult = result),
       });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
     expect(pagedResult).toBeDefined();
-
-    // Verify the number of items does not exceed pageSize
     expect(pagedResult?.items.length).toBeLessThanOrEqual(
       paginationDefault.pageSize,
     );
@@ -150,13 +140,9 @@ describe('HeroesService', () => {
       next: (heroes) => (searchedHeroes = heroes.items),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if observable emits an array
     expect(Array.isArray(searchedHeroes)).toBeTrue();
-
-    // Verify if results has one item at least
     expect(searchedHeroes?.length).toBeGreaterThan(0);
 
     // Verify if every hero name of search result matches with search value
@@ -175,16 +161,13 @@ describe('HeroesService', () => {
       next: (hero: Hero) => (selectedHero = hero),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
     // Verify that the searched hero exists in internal heroes array
-    const heroInService = service['_heroes'].find(
+    const heroInService = service['heroes'].find(
       (hero: Hero) => hero.id === id,
     );
     expect(heroInService).toBeTruthy();
-
-    // Verify if observable emits a hero and that the selected hero matches with some hero in internal array
     expect(selectedHero).toEqual(
       jasmine.objectContaining({ ...heroInService }),
     );
@@ -201,14 +184,12 @@ describe('HeroesService', () => {
     const updateHero$ = service.update(data.id, data);
     updateHero$.subscribe((hero: Hero) => (updatedHero = hero));
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if observable emits a hero and that the emitted hero matches the updated data
     expect(updatedHero).toEqual(jasmine.objectContaining({ ...data }));
 
     // Verify that the internal heroes array has been updated successfully
-    const heroInService = service['_heroes'].find(
+    const heroInService = service['heroes'].find(
       (hero: Hero) => hero.id === data.id,
     );
     expect(heroInService).toEqual(
@@ -230,10 +211,8 @@ describe('HeroesService', () => {
       next: (newHero) => (createdHero = newHero),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if observable returns a hero and if created hero is equal to hero data that was sended
     expect(createdHero).toEqual(
       jasmine.objectContaining({
         name: newHeroData.name,
@@ -249,7 +228,7 @@ describe('HeroesService', () => {
         expect(createdHero?.power).toBeUndefined();
 
     // Verify if new hero was added to internal array
-    const heroInService = service['_heroes'].find(
+    const heroInService = service['heroes'].find(
       (hero: Hero) => hero.id === createdHero?.id,
     );
     expect(heroInService).toBeDefined();
@@ -263,24 +242,48 @@ describe('HeroesService', () => {
       next: (isHeroDeleted) => (isDeleted = isHeroDeleted),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if observable returns true
     expect(isDeleted).toBeTrue();
 
     // Verify if hero was deleted from internal array
-    const heroInService = service['_heroes'].find(
+    const heroInService = service['heroes'].find(
       (hero: Hero) => hero.id === id,
     );
     expect(heroInService).toBeUndefined();
   }));
 
-  // Handle invalid data and errors
+  // -------------------------
+  // Tests to handle errors and invalid values
+  // -------------------------
+
+  it('should return hero name with special characters that match with search value', fakeAsync(() => {
+    const searchValue = HEROES_MOCK[17].name;
+    const heroes$ = service.getAll(
+      paginationDefault.page,
+      paginationDefault.pageSize,
+      searchValue,
+    );
+    let searchedHeroes: Hero[] | undefined;
+    heroes$.subscribe({
+      next: (heroes) => (searchedHeroes = heroes.items),
+    });
+
+    tick(service['delayTime']);
+
+    expect(searchedHeroes ? searchedHeroes[0].name : '').toEqual(searchValue);
+
+    // Verify if every hero name of search result matches with search value
+    searchedHeroes?.forEach((hero: Hero) => {
+      const heroName = hero.name.toLocaleLowerCase();
+      const heroSearched = searchValue.toLocaleLowerCase();
+      expect(heroName.includes(heroSearched)).toBeTrue();
+    });
+  }));
 
   it('should return empty items array if page exceeds total pages', fakeAsync(() => {
     paginationDefault = {
-      page: 100, // very high page number
+      page: 100,
       pageSize: 5,
     };
 
@@ -291,8 +294,7 @@ describe('HeroesService', () => {
         next: (result) => (pagedResult = result),
       });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
     expect(pagedResult).toBeDefined();
     expect(pagedResult?.items.length).toBe(0);
@@ -311,8 +313,7 @@ describe('HeroesService', () => {
         next: (result) => (pagedResult = result),
       });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
     expect(pagedResult).toBeDefined();
     expect(pagedResult?.items.length).toBe(HEROES_MOCK.length);
@@ -322,7 +323,7 @@ describe('HeroesService', () => {
   it('should return an empty array when no heroes match the search term', fakeAsync(() => {
     paginationDefault = {
       page: 1,
-      pageSize: service['_heroes'].length,
+      pageSize: service['heroes'].length,
     };
     const searchValue = 'noexisthero';
     const heroes$ = service.getAll(
@@ -335,13 +336,9 @@ describe('HeroesService', () => {
       next: (results) => (searchedHeroes = results.items),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify if array exists
     expect(Array.isArray(searchedHeroes)).toBeTruthy();
-
-    // Verify if return an empty array
     expect(searchedHeroes?.length).toEqual(0);
   }));
 
@@ -354,10 +351,8 @@ describe('HeroesService', () => {
       error: (err) => (error = err),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify error message
     expect(error?.message).toEqual(HERO_ERROR_MESSAGES.NO_RESULTS_FOUND);
   }));
 
@@ -375,10 +370,8 @@ describe('HeroesService', () => {
       error: (err) => (error = err),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify error message
     expect(error?.message).toEqual(HERO_ERROR_MESSAGES.UPDATE_ERROR);
   }));
 
@@ -394,10 +387,8 @@ describe('HeroesService', () => {
       error: (err) => (error = err),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify error message
     expect(error?.message).toEqual(HERO_ERROR_MESSAGES.CREATE_ERROR);
   }));
 
@@ -410,10 +401,8 @@ describe('HeroesService', () => {
       error: (err) => (error = err),
     });
 
-    // Simulate the passage of time to allow the observable to emit after delay
-    tick(service['_delayTime']);
+    tick(service['delayTime']);
 
-    // Verify error message
     expect(error?.message).toEqual(HERO_ERROR_MESSAGES.DELETE_ERROR);
   }));
 });

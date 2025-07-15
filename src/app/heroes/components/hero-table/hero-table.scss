@@ -1,3 +1,8 @@
+.table-loading {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 .buttons-flex-container {
   display: flex;
   flex-wrap: wrap;

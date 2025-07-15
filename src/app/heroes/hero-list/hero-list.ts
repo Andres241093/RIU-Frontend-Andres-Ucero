@@ -1,36 +1,44 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { MaterialModule } from '../../shared/modules/material-module/material-module';
 import { RouterLink } from '@angular/router';
 import { Hero } from '../interfaces/hero.interface';
-import { HeroesService } from '../../core/services/heroes.service';
 import { PageEvent } from '@angular/material/paginator';
-import { Subject, takeUntil } from 'rxjs';
+import { finalize } from 'rxjs';
 import { HeroTable } from '../components/hero-table/hero-table';
-import { NgComponentOutlet } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { HeroSearchBar } from '../components/hero-search-bar/hero-search-bar';
+import { HeroesService } from '../services/heroes.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ModalService } from '../../core/services/modal-service';
+import {
+  HERO_DELETE_ERROR_CONFIG,
+  HERO_DELETE_MODAL_CONFIG,
+  HERO_DELETE_SUCCESS_CONFIG,
+} from '../const/hero-modal-config';
+import { DialogConfig } from '../../shared/interfaces/dialog-config.interface';
 
 @Component({
-  imports: [RouterLink, MaterialModule, NgComponentOutlet, ReactiveFormsModule],
+  imports: [RouterLink, MaterialModule, HeroSearchBar, HeroTable],
   templateUrl: './hero-list.html',
   styleUrl: './hero-list.scss',
 })
-export class HeroList implements OnInit, OnDestroy {
-  private readonly _heroesService = inject(HeroesService);
-  private readonly _unsubscribe$ = new Subject();
-  private NO_PAGINATION = 0;
-
-  public heroTableComponent = HeroTable;
+export class HeroList implements OnInit {
   public dataSource = signal<Hero[]>([]);
   public totalData = signal(0);
-  public searchControl = new FormControl('');
-  public _defaultPagination = {
+  public isLoading = signal(false);
+  public showPaginator = signal(true);
+
+  private readonly heroesService = inject(HeroesService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly modalService = inject(ModalService);
+  private searchValue = '';
+  private readonly paginationConfig = {
     page: 1,
-    pageSize: 5,
-    hide: false,
+    pageSize: 10,
+    noPagination: 0,
   };
 
   /**
-   * Get first 5 heroes when component is rendered and ready
+   * Get heroes when component is rendered and ready
    */
   ngOnInit(): void {
     this.getHeroes();
@@ -39,33 +47,65 @@ export class HeroList implements OnInit, OnDestroy {
   /**
    * Fetches paginated or searched heroes data to populate the table.
    *
-   * @param page The page number to retrieve. If 0, pagination is disabled and all results are returned.
-   * @param pageSize The number of heroes per page. If 0, pagination is disabled and all results are returned.
+   * @param page The page number to retrieve. First page by default. If 0, pagination is disabled and all results are returned.
+   * @param pageSize The number of heroes per page. 5 page size by default. If 0, pagination is disabled and all results are returned.
    * @param searchValue Text to filter heroes by name. If empty, all heroes are returned without filtering.
    */
   getHeroes(
-    page = this._defaultPagination.page,
-    pageSize = this._defaultPagination.pageSize,
+    page = this.paginationConfig.page,
+    pageSize = this.paginationConfig.pageSize,
     searchValue = '',
   ): void {
-    this._heroesService
+    this.isLoading.set(true);
+    this.heroesService
       .getAll(page, pageSize, searchValue)
-      .pipe(takeUntil(this._unsubscribe$))
+      .pipe(
+        // Unsubscribe when component is destroyed
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (heroes) => {
           this.dataSource.set(heroes.items);
           this.totalData.set(heroes.total);
         },
+        error: (err) => {
+          console.error(err);
+        },
       });
   }
 
   /**
-   * Search a hero by name
+   * Open delete modal
+   * @param hero Hero data to show in modal and retrieve id to delete
    */
-  searchHeroes(): void {
-    const searchValue = this.searchControl.value ?? '';
-    this._defaultPagination.hide = true;
-    this.getHeroes(this.NO_PAGINATION, this.NO_PAGINATION, searchValue.trim());
+  openDeleteDialog(hero: Hero): void {
+    const config: DialogConfig = {
+      ...HERO_DELETE_MODAL_CONFIG,
+      content: hero.name,
+    };
+    this.modalService.open(config, () => this.deleteHero(hero));
+  }
+
+  /**
+   * Search a hero by name and disable pagination
+   */
+  searchHeroes(name: string): void {
+    this.searchValue = name;
+    this.showPaginator.set(false);
+    this.getHeroes(
+      this.paginationConfig.noPagination,
+      this.paginationConfig.noPagination,
+      name,
+    );
+  }
+
+  /**
+   * Show paginator again an fetch 5 first heroes
+   */
+  resetValues(): void {
+    this.showPaginator.set(true);
+    this.getHeroes();
   }
 
   /**
@@ -73,24 +113,32 @@ export class HeroList implements OnInit, OnDestroy {
    * @param pageEvent Pagination event with pageIndex and pageSize
    */
   getPage(pageEvent: PageEvent): void {
-    const searchValue = this.searchControl.value ?? '';
-    this.getHeroes(
-      pageEvent.pageIndex + 1,
-      pageEvent.pageSize,
-      searchValue.trim(),
-    );
-  }
-
-  reset(): void {
-    this._defaultPagination.hide = false;
-    this.getHeroes();
+    this.getHeroes(pageEvent.pageIndex + 1, pageEvent.pageSize);
   }
 
   /**
-   * Unsubscribe all observables to avoid memory leaks
+   * Delete a hero
+   * @param id id from hero whose be deleted
    */
-  ngOnDestroy(): void {
-    this._unsubscribe$.next(null);
-    this._unsubscribe$.complete();
+  private deleteHero(hero: Hero): void {
+    const configSuccess = {
+      ...HERO_DELETE_SUCCESS_CONFIG,
+      content: hero.name,
+    };
+    this.isLoading.set(true);
+    this.heroesService
+      .delete(hero.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.modalService.open(configSuccess, () =>
+            this.searchHeroes(this.searchValue),
+          );
+        },
+        error: () => {
+          this.modalService.open(HERO_DELETE_ERROR_CONFIG);
+          this.isLoading.set(false);
+        },
+      });
   }
 }

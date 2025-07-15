@@ -11,6 +11,6 @@ import { AsyncPipe } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Loader {
-  private readonly _loaderService = inject(LoaderService);
-  public isLoading$ = this._loaderService.loading$;
+  private readonly loaderService = inject(LoaderService);
+  public isLoading$ = this.loaderService.loading$;
 }

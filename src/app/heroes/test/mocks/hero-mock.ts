@@ -1,4 +1,4 @@
-import { Hero } from '../interfaces/hero.interface';
+import { Hero } from '../../interfaces/hero.interface';
 
 export const HEROES_MOCK: Hero[] = [
   { id: 1, name: '', universe: 'Marvel' },
@@ -35,8 +35,13 @@ export const HEROES_MOCK: Hero[] = [
     universe: 'DC',
     power: ['Underwater Breathing', '', null],
   },
-  { id: 17, name: 'Goku', universe: 'Dragon Ball', power: ['Super Saiyan'] },
+  { id: 17, name: 'Góku', universe: 'Dragon Ball', power: ['Super Saiyan'] },
   { id: 18, name: 'Vegeta', universe: 'Dragon Ball' },
   { id: 19, name: 'Kakashi Hatake', universe: 'Naruto', power: ['Copy Ninja'] },
   { id: 20, name: 'Jiraiya', universe: 'Naruto', power: [] },
 ];
+
+export const HEROES_RESPONSE_MOCK = {
+  items: HEROES_MOCK,
+  total: HEROES_MOCK.length,
+};

@@ -1,18 +1,17 @@
 import { inject, Injectable } from '@angular/core';
 import { Hero } from '../../heroes/interfaces/hero.interface';
-import { delay, finalize, map, Observable, of, throwError } from 'rxjs';
-import { HEROES_TOKEN } from '../injection-tokens/heroes-token';
+import { delay, map, Observable, of, throwError } from 'rxjs';
 import { HERO_ERROR_MESSAGES } from '../../heroes/const/hero-error-messages';
-import { LoaderService } from '../loaders/loader-service';
 import { PagedResult } from '../../shared/interfaces/pagination.interface';
+import { HEROES_TOKEN } from '../../core/injection-tokens/heroes-token';
+import { removeAccents } from '../../shared/utils/string.utils';
 
 @Injectable({
   providedIn: 'root',
 })
 export class HeroesService {
-  private _heroes = inject(HEROES_TOKEN);
-  private readonly _loaderService = inject(LoaderService);
-  private readonly _delayTime = 2000;
+  private heroes = inject(HEROES_TOKEN);
+  private readonly delayTime = 1500;
 
   /**
    * Get heroes by page or name
@@ -22,20 +21,20 @@ export class HeroesService {
    * @returns An array of paginated heroes
    */
   getAll(
-    page = 0,
-    pageSize = 0,
+    page: number,
+    pageSize: number,
     name: string = '',
   ): Observable<PagedResult<Hero>> {
     let items: Hero[];
 
-    this._loaderService.show();
-
-    // If name exists, filter by hero's name ignoring uppercase otherwise return all heroes
+    // If name exists, filter by hero's name ignoring uppercase and specials characters otherwise return all heroes
     const filteredHeroes = name
-      ? this._heroes.filter((hero) =>
-          hero.name.toLocaleLowerCase().includes(name.toLocaleLowerCase()),
+      ? this.heroes.filter((hero) =>
+          removeAccents(hero.name.toLocaleLowerCase()).includes(
+            name.toLocaleLowerCase(),
+          ),
         )
-      : this._heroes;
+      : this.heroes;
 
     // Validate if page and pageSize exists
     const hasPagination = page > 0 && pageSize > 0;
@@ -50,7 +49,7 @@ export class HeroesService {
     const total = filteredHeroes.length;
 
     return of({ items, total }).pipe(
-      delay(this._delayTime),
+      delay(this.delayTime),
       map((result) => ({
         items: result.items.map((hero) => ({
           ...hero,
@@ -58,7 +57,6 @@ export class HeroesService {
         })),
         total: result.total,
       })),
-      finalize(() => this._loaderService.hide()),
     );
   }
 
@@ -68,17 +66,12 @@ export class HeroesService {
    * @returns Observable emitting the found hero or error if not found.
    */
   getById(heroId: number): Observable<Hero> {
-    const hero = this._heroes.find((hero) => hero.id === heroId);
-    this._loaderService.show();
+    const hero = this.heroes.find((hero) => hero.id === heroId);
 
     return hero
-      ? of(hero).pipe(
-          delay(this._delayTime),
-          finalize(() => this._loaderService.hide()),
-        )
+      ? of(hero).pipe(delay(this.delayTime))
       : this.throwError(HERO_ERROR_MESSAGES.NO_RESULTS_FOUND).pipe(
-          delay(this._delayTime),
-          finalize(() => this._loaderService.hide()),
+          delay(this.delayTime),
         );
   }
 
@@ -89,8 +82,7 @@ export class HeroesService {
    * @returns Observable emitting the updated hero or an error if the hero is not found.
    */
   update(id: number, changes: Partial<Omit<Hero, 'id'>>): Observable<Hero> {
-    const index = this._heroes.findIndex((h) => h.id === id);
-    this._loaderService.show();
+    const index = this.heroes.findIndex((h) => h.id === id);
 
     // Check if was found
     if (index === -1) {
@@ -98,18 +90,15 @@ export class HeroesService {
       return this.throwError(HERO_ERROR_MESSAGES.UPDATE_ERROR);
     }
 
-    const updatedHero = { ...this._heroes[index], ...changes };
+    const updatedHero = { ...this.heroes[index], ...changes };
 
     // Update heroes array immutably to maintain state integrity
-    this._heroes = [
-      ...this._heroes.slice(0, index),
+    this.heroes = [
+      ...this.heroes.slice(0, index),
       updatedHero,
-      ...this._heroes.slice(index + 1),
+      ...this.heroes.slice(index + 1),
     ];
-    return of(updatedHero).pipe(
-      delay(this._delayTime),
-      finalize(() => this._loaderService.hide()),
-    );
+    return of(updatedHero).pipe(delay(this.delayTime));
   }
 
   /**
@@ -121,19 +110,15 @@ export class HeroesService {
     // Generate a new id
     const newId = this.generateId();
     const newHero = { id: newId, ...hero };
-    this._loaderService.show();
 
     // If required data has no present, throw an error
     if (!hero.name?.trim() || !hero.universe?.trim()) {
       return this.throwError(HERO_ERROR_MESSAGES.CREATE_ERROR);
     }
     // Update heroes array immutably to maintain state integrity
-    this._heroes = [...this._heroes, newHero];
+    this.heroes = [...this.heroes, newHero];
 
-    return of(newHero).pipe(
-      delay(this._delayTime),
-      finalize(() => this._loaderService.hide()),
-    );
+    return of(newHero).pipe(delay(this.delayTime));
   }
 
   /**
@@ -143,8 +128,7 @@ export class HeroesService {
    */
   delete(heroId: number): Observable<boolean> {
     // Find hero to delete
-    const index = this._heroes.findIndex((hero) => hero.id === heroId);
-    this._loaderService.show();
+    const index = this.heroes.findIndex((hero) => hero.id === heroId);
 
     // If wasn't founded throws an error
     if (index === -1) {
@@ -153,12 +137,9 @@ export class HeroesService {
 
     // Otherwise, filter all heroes except that one whose was deleted
     // Update heroes array immutably to maintain state integrity
-    this._heroes = this._heroes.filter((hero) => hero.id !== heroId);
+    this.heroes = this.heroes.filter((hero) => hero.id !== heroId);
 
-    return of(true).pipe(
-      delay(this._delayTime),
-      finalize(() => this._loaderService.hide()),
-    );
+    return of(true).pipe(delay(this.delayTime));
   }
 
   /**
@@ -167,11 +148,7 @@ export class HeroesService {
    * @returns Observable with an error
    */
   private throwError(message: string): Observable<never> {
-    this._loaderService.show();
-    return throwError(() => new Error(message)).pipe(
-      delay(this._delayTime),
-      finalize(() => this._loaderService.hide()),
-    );
+    return throwError(() => new Error(message)).pipe(delay(this.delayTime));
   }
 
   /**
@@ -189,8 +166,8 @@ export class HeroesService {
    */
   private generateId(): number {
     const id =
-      this._heroes.length > 0
-        ? Math.max(...this._heroes.map((hero) => hero.id)) + 1
+      this.heroes.length > 0
+        ? Math.max(...this.heroes.map((hero) => hero.id)) + 1
         : 1;
     return id;
   }
